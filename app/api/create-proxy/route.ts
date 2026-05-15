@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 
-const DOMAIN = "localhost:3000";
-
 export async function POST(request: Request) {
   try {
     const { targetUrl } = await request.json();
@@ -33,10 +31,14 @@ export async function POST(request: Request) {
     // Encode the full target URL for the init step
     const encoded = Buffer.from(targetUrl).toString("base64url");
 
+    // Derive domain from request host header
+    const host = request.headers.get("host") || "localhost:3000";
+    const protocol = request.headers.get("x-forwarded-proto") || "http";
+
     // Preserve original path and query, append __init
     const pathAndQuery = parsed.pathname + parsed.search;
     const separator = parsed.search ? "&" : "?";
-    const proxyUrl = `http://${proxyId}.proxy.${DOMAIN}${pathAndQuery}${separator}__init=${encoded}`;
+    const proxyUrl = `${protocol}://${proxyId}.proxy.${host}${pathAndQuery}${separator}__init=${encoded}`;
 
     return NextResponse.json({
       success: true,
